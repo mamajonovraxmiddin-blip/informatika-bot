@@ -6,7 +6,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import FSInputFile
 
 # BotFather bergan O'Z TOKENINGIZNI shu yerga qo'ying
-API_TOKEN = '8910821232:AAF2e_xNbWR7sDz4xu1CKr-WFEEdlDB4GMw'
+import os
+API_TOKEN = os.environ.get('BOT_TOKEN')
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
