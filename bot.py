@@ -53,8 +53,16 @@ async def cmd_start(message: types.Message):
 
 # --- ADMIN UCHUN XABARNOMA BUYRUG'I ---
 # Masalan yangi fayl yuklasangiz: /yangi 1_BSB_DEMO deb yozasiz
+# Shaxsiy Telegram ID raqamingizni kiriting
+# @userinfobot orqali olgan raqamingizni shu yerga yozing
+ADMIN_ID = 678275001  
+
 @dp.message()
 async def admin_notify(message: types.Message):
+    # Agar xabar yuborayotgan odam siz bo'lmasangiz, buyruq umuman ishlamaydi
+    if message.from_user.id != ADMIN_ID:
+        return 
+
     if message.text.startswith("/yangi "):
         file_name = message.text.replace("/yangi ", "").strip()
         success_count = 0
@@ -70,6 +78,7 @@ async def admin_notify(message: types.Message):
             except Exception:
                 pass
         await message.reply(f"📢 Xabarnoma {success_count} ta o'quvchiga yuborildi!")
+
 
 # Tugmalar bosilganda ishlovchi qism
 @dp.callback_query()
