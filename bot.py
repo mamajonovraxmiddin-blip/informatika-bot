@@ -12,8 +12,12 @@ API_TOKEN = os.environ.get('BOT_TOKEN')
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
-# Foydalanuvchilar ID'sini xabarnoma uchun saqlash (Xotirada saqlanadi)
+# Foydalanuvchilar ID'sini xabarnoma uchun saqlash
 users_db = set()
+
+# Spamni tekshirish uchun foydalanuvchi oxirgi marta tugma bosgan vaqtni saqlovchi ro'yxat
+import time
+user_spam_control = {}
 
 # PDF fayllarni papkadan topib o'quvchiga yuboruvchi asosiy funksiya
 async def send_pdf_file(callback: types.CallbackQuery, file_name: str):
@@ -84,6 +88,20 @@ async def admin_notify(message: types.Message):
 @dp.callback_query()
 async def process_callback(callback: types.CallbackQuery):
     data = callback.data
+    user_id = callback.from_user.id
+    current_time = time.time()
+    
+    # --- SPAMGA QARSHI TEKSHIRUV (ANTI-FLOOD) ---
+    if user_id in user_spam_control:
+        last_click_time = user_spam_control[user_id]
+        # Agar o'quvchi tugmani 3 soniyadan kam vaqt ichida qayta bossa
+        if current_time - last_click_time < 3:
+            await callback.answer("⚠️ Iltimos, tugmalarni juda tez bosmang! Biroz kuting.", show_alert=True)
+            return
+            
+    # Oxirgi bosilgan vaqtni yangilash
+    user_spam_control[user_id] = current_time
+
 
     # --- BSB MENYUSI ---
     if data == "menu_bsb":
