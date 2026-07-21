@@ -138,9 +138,26 @@ async def process_callback(callback: types.CallbackQuery):
 
     await callback.answer()
 
+# Kodingizning eng pastidagi eski main va asyncio.run qismini shu kod bilan almashtiring:
+
 async def main():
+    # Web Service bepul ishlashi uchun soxta port yaratamiz
+    from aiohttp import web
+    async def handle(request):
+        return web.Response(text="Bot ishlamoqda!")
+    
+    app = web.Application()
+    app.router.add_get('/', handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    # Render beradigan portni oladi yoki avtomat 10000-portni yoqadi
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    asyncio.create_task(site.start())
+    
     print("Informatika BSB/CHSB boti to'liq va tezkor rejimda ishga tushdi...")
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
     asyncio.run(main())
+
