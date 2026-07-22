@@ -9,7 +9,7 @@ from aiogram.types import FSInputFile
 # --- TOKЕNLAR VA SOZLAMALAR ---
 # ⚠️ Render Environment bo'limiga BOT_TOKEN qo'shgan bo'lsangiz, shu qator qolsin.
 # Agar u yerga qo'shmagan bo'lsangiz, os.environ.get('BOT_TOKEN') o'rniga '@BotFather'dan olgan tokeningizni yozing.
-API_TOKEN = os.environ.get('BOT_TOKEN', '8910821232:AAE4Tg7GF5T8ZrzWurBr1tJSHs-7-HrGyis')
+API_TOKEN = os.environ.get('BOT_TOKEN')
 
 # ⚠️ Bu yerga @userinfobot orqali olgan shaxsiy Telegram ID raqamingizni yozing
 ADMIN_ID = 678275001  
