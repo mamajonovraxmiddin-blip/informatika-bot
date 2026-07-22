@@ -158,19 +158,27 @@ async def process_callback(callback: types.CallbackQuery):
 
     await callback.answer()
 
+# Kodingizning eng pastidagi main() funksiyasini shu kod bilan yangilang:
+
 async def main():
-    # Render Web Service uchun soxta port port-binding qo'shamiz
+    # UptimeRobot va Render portlarini to'g'ri bog'lash uchun haqiqiy veb-server ochamiz
     from aiohttp import web
-    async def handle(request):
-        return web.Response(text="Bot muvaffaqiyatli ishlamoqda!")
     
+    async def handle(request):
+        # UptimeRobot so'rov yuborganda unga "OK" va 200 kodini qaytaradi
+        return web.Response(text="Bot muvaffaqiyatli ishlamoqda!", content_type="text/plain")
+        
     app = web.Application()
     app.router.add_get('/', handle)
+    app.router.add_head('/', handle) # UptimeRobot ba'zan HEAD so'rov yuboradi, buni ham qabul qilamiz
+    
     runner = web.AppRunner(app)
     await runner.setup()
+    
+    # Render taqdim etadigan rasmiy portni aniqlaymiz
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, '0.0.0.0', port)
-    asyncio.create_task(site.start())
+    await site.start()
     
     print("Informatika BSB/CHSB boti to'liq va tezkor rejimda ishga tushdi...")
     await dp.start_polling(bot)
