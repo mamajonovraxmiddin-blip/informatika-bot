@@ -170,8 +170,7 @@ async def main():
         
     app = web.Application()
     app.router.add_get('/', handle)
-    app.router.add_head('/', handle) # UptimeRobot ba'zan HEAD so'rov yuboradi, buni ham qabul qilamiz
-    
+        
     runner = web.AppRunner(app)
     await runner.setup()
     
