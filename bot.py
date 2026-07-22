@@ -1,28 +1,29 @@
 import asyncio
 import os
+import time
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import FSInputFile
 
-# BotFather bergan O'Z TOKENINGIZNI shu yerga qo'ying
-import os
-API_TOKEN = os.environ.get('BOT_TOKEN')
+# --- TOKЕNLAR VA SOZLAMALAR ---
+# ⚠️ Render Environment bo'limiga BOT_TOKEN qo'shgan bo'lsangiz, shu qator qolsin.
+# Agar u yerga qo'shmagan bo'lsangiz, os.environ.get('BOT_TOKEN') o'rniga '@BotFather'dan olgan tokeningizni yozing.
+API_TOKEN = os.environ.get('BOT_TOKEN', '8910821232:AAE4Tg7GF5T8ZrzWurBr1tJSHs-7-HrGyis')
+
+# ⚠️ Bu yerga @userinfobot orqali olgan shaxsiy Telegram ID raqamingizni yozing
+ADMIN_ID = 678275001  
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
-# Foydalanuvchilar ID'sini xabarnoma uchun saqlash
+# Foydalanuvchilar ID'sini va spam nazoratini xotirada saqlash
 users_db = set()
-
-# Spamni tekshirish uchun foydalanuvchi oxirgi marta tugma bosgan vaqtni saqlovchi ro'yxat
-import time
 user_spam_control = {}
 
-# PDF fayllarni papkadan topib o'quvchiga yuboruvchi asosiy funksiya
+# PDF fayllarni papkadan topib o'quvchiga yuboruvchi funksiya
 async def send_pdf_file(callback: types.CallbackQuery, file_name: str):
     file_path = f"{file_name}.pdf"
-    
     if os.path.exists(file_path):
         await callback.answer("Fayl yuklanmoqda...")
         document = FSInputFile(file_path)
@@ -31,7 +32,6 @@ async def send_pdf_file(callback: types.CallbackQuery, file_name: str):
             caption=f"📄 **{file_name.replace('_', ' ')}** fayli muvaffaqiyatli yuklandi."
         )
     else:
-        # Fayl hali papkaga tashlanmagan bo'lsa, ogohlantirish beradi
         await callback.answer("⚠️ Bu fayl dars davomida o'qituvchi tomonidan yuklanadi!", show_alert=True)
 
 # Bosh menyu tugmalari
@@ -46,7 +46,7 @@ def get_main_menu():
 # Bot ishga tushganda (/start)
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
-    users_db.add(message.from_user.id) # O'quvchini xabarnoma ro'yxatiga qo'shish
+    users_db.add(message.from_user.id)
     await message.reply(
         f"Salom, {message.from_user.full_name}!\n"
         f"11-sinf **Informatika** fanidan BSB va CHSB imtihonlariga tayyorgarlik botiga xush kelibsiz!\n\n"
@@ -56,18 +56,14 @@ async def cmd_start(message: types.Message):
     )
 
 # --- ADMIN UCHUN XABARNOMA BUYRUG'I ---
-# Masalan yangi fayl yuklasangiz: /yangi 1_BSB_DEMO deb yozasiz
-# Shaxsiy Telegram ID raqamingizni kiriting
-# @userinfobot orqali olgan raqamingizni shu yerga yozing
-ADMIN_ID = 678275001  
-
 @dp.message()
 async def admin_notify(message: types.Message):
-    # Agar xabar yuborayotgan odam siz bo'lmasangiz, buyruq umuman ishlamaydi
-    if message.from_user.id != ADMIN_ID:
-        return 
-
-    if message.text.startswith("/yangi "):
+    # Faqat matnli va /yangi buyrug'i bilan boshlangan xabarlarni tekshiradi
+    if message.text and message.text.startswith("/yangi "):
+        # Agar buyruqni admin yozmagan bo'lsa, bot e'tiborsiz qoldiradi
+        if message.from_user.id != ADMIN_ID:
+            return 
+            
         file_name = message.text.replace("/yangi ", "").strip()
         success_count = 0
         for user_id in users_db:
@@ -83,7 +79,6 @@ async def admin_notify(message: types.Message):
                 pass
         await message.reply(f"📢 Xabarnoma {success_count} ta o'quvchiga yuborildi!")
 
-
 # Tugmalar bosilganda ishlovchi qism
 @dp.callback_query()
 async def process_callback(callback: types.CallbackQuery):
@@ -94,14 +89,11 @@ async def process_callback(callback: types.CallbackQuery):
     # --- SPAMGA QARSHI TEKSHIRUV (ANTI-FLOOD) ---
     if user_id in user_spam_control:
         last_click_time = user_spam_control[user_id]
-        # Agar o'quvchi tugmani 3 soniyadan kam vaqt ichida qayta bossa
         if current_time - last_click_time < 3:
             await callback.answer("⚠️ Iltimos, tugmalarni juda tez bosmang! Biroz kuting.", show_alert=True)
             return
             
-    # Oxirgi bosilgan vaqtni yangilash
     user_spam_control[user_id] = current_time
-
 
     # --- BSB MENYUSI ---
     if data == "menu_bsb":
@@ -166,19 +158,16 @@ async def process_callback(callback: types.CallbackQuery):
 
     await callback.answer()
 
-# Kodingizning eng pastidagi eski main va asyncio.run qismini shu kod bilan almashtiring:
-
 async def main():
-    # Web Service bepul ishlashi uchun soxta port yaratamiz
+    # Render Web Service uchun soxta port port-binding qo'shamiz
     from aiohttp import web
     async def handle(request):
-        return web.Response(text="Bot ishlamoqda!")
+        return web.Response(text="Bot muvaffaqiyatli ishlamoqda!")
     
     app = web.Application()
     app.router.add_get('/', handle)
     runner = web.AppRunner(app)
     await runner.setup()
-    # Render beradigan portni oladi yoki avtomat 10000-portni yoqadi
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, '0.0.0.0', port)
     asyncio.create_task(site.start())
@@ -188,4 +177,3 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
-
